@@ -1,0 +1,8 @@
+## Interface: 100105
+## Title: Repair Savings Tracker
+## Notes: Tracks gold saved by using Earthen Master's Hammer for repairs.
+## Author: Matthas
+## Version: 1.0
+## SavedVariables: RepairSavings
+RepairSavingsTracker.lua
+RepairSavingsTracker.xml
