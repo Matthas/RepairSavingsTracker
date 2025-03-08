@@ -1,12 +1,16 @@
 local frame = CreateFrame("Frame")
-frame:RegisterEvent("UPDATE_INVENTORY_DURABILITY")
 frame:RegisterEvent("PLAYER_REGEN_ENABLED")
 frame:RegisterEvent("PLAYER_REGEN_DISABLED")
+frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+frame:RegisterEvent("PLAYER_LEAVING_WORLD")
+frame:RegisterEvent("MERCHANT_SHOW")
+frame:RegisterEvent("MERCHANT_CLOSED")
 
 local previousRepairCost = 0
-local EARTHEN_MASTERS_HAMMER_ITEM_ID = 225660
 local inCombat = false
 local repairInProgress = false
+local characterWindowOpen = false
+local vendorWindowOpen = false
 local lastUpdate = 0
 local COOLDOWN_PERIOD = 1 -- Cooldown period in seconds
 
@@ -18,7 +22,7 @@ local function GetTotalRepairCost()
             totalCost = totalCost + repairitemCost.repairCost
         end
     end
-    return (totalCost / 2) --currently addon fires twice, so half it for correct tracking
+    return (totalCost / 2)
 end
 
 local function HandleRepairCost()
@@ -43,11 +47,21 @@ local function OnEvent(self, event)
         inCombat = false
     elseif event == "PLAYER_REGEN_DISABLED" then
         inCombat = true
-    elseif event == "UPDATE_INVENTORY_DURABILITY" and not inCombat then
-        if not repairInProgress then
-            repairInProgress = true
-            C_Timer.After(1, HandleRepairCost) -- Wait 1 second before handling the repair cost
-        end
+    elseif event == "MERCHANT_SHOW" then
+        vendorWindowOpen = true
+    elseif event == "MERCHANT_CLOSED" then
+        vendorWindowOpen = false
+    elseif event == "PLAYER_ENTERING_WORLD" then
+        CharacterFrame:HookScript("OnShow", function()
+            characterWindowOpen = true
+            previousRepairCost = GetTotalRepairCost()
+        end)
+        CharacterFrame:HookScript("OnHide", function()
+            characterWindowOpen = false
+            if not vendorWindowOpen then
+                HandleRepairCost()
+            end
+        end)
     end
 end
 
